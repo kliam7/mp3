@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHROME AUDIO // Advanced EQ Visualizer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0c0c0c 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            z-index: 10;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(to right, #c0c0c0, #ffffff, #a0a0a0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            font-weight: 300;
+            text-transform: uppercase;
+        }
+        
+        .header p {
+            font-size: 1rem;
+            color: #a0a0a0;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            font-weight: 300;
+            position: relative;
+        }
+        
+        /* Upload Section - Minimalist Metallic */
+        .upload-section {
+            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            border: 1px solid rgba(100, 100, 100, 0.2);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+            margin-bottom: 20px;
+        }
+        
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(200, 200, 200, 0.6), transparent);
+        }
+        
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .upload-header h2 {
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .upload-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .metal-btn {
+            background: linear-gradient(145deg, rgba(60, 60, 60, 0.9), rgba(40, 40, 40, 0.9));
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            color: #e0e0e0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-weight: 400;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+        
+        .metal-btn:hover {
+            background: linear-gradient(145deg, rgba(80, 80, 80, 0.9), rgba(50, 50, 50, 0.9));
+            transform: translateY(-2px);
+            border-color: rgba(200, 200, 200, 0.5);
+        }
+        
+        .metal-btn:active {
+            transform: translateY(0);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(145deg, rgba(80, 40, 40, 0.9), rgba(50, 20, 20, 0.9));
+            border-color: rgba(180, 80, 80, 0.3);
+        }
+        
+        .clear-btn:hover {
+            background: linear-gradient(145deg, rgba(100, 50, 50, 0.9), rgba(60, 30, 30, 0.9));
+            border-color: rgba(200, 100, 100, 0.5);
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(150, 150, 150, 0.3);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(25, 25, 25, 0.5);
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            background: rgba(35, 35, 35, 0.5);
+            border-color: rgba(200, 200, 200, 0.5);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: #c0c0c0;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        
+        .upload-area p {
+            color: #a0a0a0;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* Main Player Container */
+        .player-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            width: 100%;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        /* Player - Sleek Metallic */
+        .player {
+            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+            border-radius: 20px;
+            padding: 30px;
+            width: 600px;
+            border: 1px solid rgba(100, 100, 100, 0.2);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .player::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(200, 200, 200, 0.6), transparent);
+        }
+        
+        /* Display Screen - Sleek */
+        .display {
+            background: linear-gradient(160deg, rgba(15, 15, 15, 0.9), rgba(10, 10, 10, 0.9));
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(200, 200, 200, 0.5), transparent);
+        }
+        
+        .song-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .album-art {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            margin-right: 20px;
+            background: linear-gradient(135deg, #202020, #101010);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .album-art i {
+            font-size: 2.5rem;
+            color: #c0c0c0;
+        }
+        
+        .song-details h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #f0f0f0;
+            font-weight: 400;
+            letter-spacing: 1px;
+            max-width: 350px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .song-details p {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+            max-width: 350px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Progress Bar - Sleek */
+        .progress-container {
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 3px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(80, 80, 80, 0.3);
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #c0c0c0, #a0a0a0);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            letter-spacing: 1px;
+        }
+        
+        /* Enhanced EQ Visualizer */
+        .eq-container {
+            margin: 25px 0;
+            height: 140px;
+            background: rgba(5, 5, 10, 0.7);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(0, 150, 255, 0.1);
+        }
+        
+        .eq-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 60%, rgba(0, 150, 255, 0.05) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .eq-title {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            color: #80c0ff;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 3;
+            font-weight: 500;
+        }
+        
+        .eq-visualizer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-top: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .eq-bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        
+        .eq-bar {
+            width: 14px;
+            min-height: 4px;
+            background: linear-gradient(to top, 
+                #00ccff 0%, 
+                #0088ff 30%, 
+                #6600cc 70%, 
+                #ff00cc 100%);
+            border-radius: 7px 7px 4px 4px;
+            transition: height 0.05s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            box-shadow: 
+                0 0 10px rgba(0, 200, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            position: relative;
+            margin: 0 2px;
+        }
+        
+        .eq-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 7px 7px 0 0;
+        }
+        
+        .eq-bar::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(to top, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                transparent 100%);
+            border-radius: 4px;
+            z-index: 1;
+        }
+        
+        .eq-bar-glow {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 20px;
+            background: radial-gradient(ellipse at center, 
+                rgba(0, 200, 255, 0.4) 0%, 
+                rgba(0, 100, 255, 0.2) 40%, 
+                transparent 70%);
+            filter: blur(5px);
+            z-index: 0;
+            opacity: 0.7;
+        }
+        
+        .eq-frequency-label {
+            color: #80a0c0;
+            font-size: 0.6rem;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .eq-center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, 
+                transparent 0%, 
+                rgba(100, 150, 255, 0.3) 50%, 
+                transparent 100%);
+            z-index: 1;
+        }
+        
+        .eq-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(100, 150, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(100, 150, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        
+        /* Spectrum Analyzer (Alternative EQ Style) */
+        .spectrum-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        
+        .spectrum-line {
+            position: absolute;
+            bottom: 0;
+            height: 100%;
+            width: 2px;
+            background: linear-gradient(to top, 
+                transparent 0%, 
+                rgba(0, 200, 255, 0.3) 30%, 
+                rgba(100, 0, 255, 0.6) 70%, 
+                transparent 100%);
+            filter: blur(1px);
+        }
+        
+        /* Controls - Sleek Metallic */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .control-btn {
+            background: linear-gradient(145deg, rgba(50, 50, 50, 0.9), rgba(30, 30, 30, 0.9));
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            color: #e0e0e0;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.5),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(145deg, rgba(70, 70, 70, 0.9), rgba(50, 50, 50, 0.9));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            border-color: rgba(200, 200, 200, 0.5);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .play-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 1.8rem;
+            background: linear-gradient(145deg, rgba(70, 70, 70, 0.9), rgba(50, 50, 50, 0.9));
+        }
+        
+        /* Volume */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .volume-slider {
+            flex-grow: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid rgba(80, 80, 80, 0.3);
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #c0c0c0;
+            cursor: pointer;
+            border: 2px solid #a0a0a0;
+        }
+        
+        /* Playlist - Sleek */
+        .playlist {
+            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+            border-radius: 20px;
+            padding: 25px;
+            width: 450px;
+            border: 1px solid rgba(100, 100, 100, 0.2);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .playlist::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(200, 200, 200, 0.6), transparent);
+        }
+        
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .playlist h2 {
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .track-count {
+            background: rgba(40, 40, 40, 0.8);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            letter-spacing: 1px;
+        }
+        
+        .playlist-items {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .playlist-items::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .playlist-items::-webkit-scrollbar-track {
+            background: rgba(40, 40, 40, 0.5);
+            border-radius: 3px;
+        }
+        
+        .playlist-items::-webkit-scrollbar-thumb {
+            background: #a0a0a0;
+            border-radius: 3px;
+        }
+        
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: rgba(25, 25, 25, 0.6);
+            border: 1px solid rgba(100, 100, 100, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .playlist-item:hover {
+            background: rgba(35, 35, 35, 0.8);
+            border-color: rgba(150, 150, 150, 0.4);
+        }
+        
+        .playlist-item.active {
+            background: rgba(50, 50, 50, 0.8);
+            border-color: rgba(200, 200, 200, 0.5);
+        }
+        
+        .playlist-item-remove {
+            position: absolute;
+            right: 15px;
+            background: rgba(60, 30, 30, 0.7);
+            border: none;
+            color: #e0a0a0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s;
+            border: 1px solid rgba(180, 80, 80, 0.3);
+        }
+        
+        .playlist-item:hover .playlist-item-remove {
+            opacity: 1;
+        }
+        
+        .playlist-item-remove:hover {
+            background: rgba(80, 40, 40, 0.9);
+        }
+        
+        .playlist-item-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        
+        .playlist-item-info h4 {
+            font-size: 1rem;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 400;
+        }
+        
+        .playlist-item-info p {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            z-index: 10;
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .player-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .player, .playlist {
+                width: 100%;
+                max-width: 700px;
+            }
+            
+            .header h1 {
+                font-size: 2.8rem;
+            }
+        }
+        
+        @media (max-width: 700px) {
+            .player {
+                padding: 25px;
+            }
+            
+            .upload-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .upload-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .controls {
+                gap: 20px;
+            }
+            
+            .control-btn {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .play-btn {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .metal-btn {
+                padding: 10px 18px;
+                font-size: 0.85rem;
+            }
+            
+            .album-art {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .song-details h3 {
+                font-size: 1.3rem;
+            }
+            
+            .eq-container {
+                height: 120px;
+            }
+            
+            .eq-bar {
+                width: 10px;
+            }
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            color: #e0e0e0;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification i {
+            margin-right: 10px;
+            color: #c0c0c0;
+        }
+        
+        /* Empty State */
+        .empty-playlist {
+            text-align: center;
+            padding: 50px 20px;
+            color: #a0a0a0;
+        }
+        
+        .empty-playlist i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #c0c0c0;
+            opacity: 0.5;
+        }
+        
+        .empty-playlist h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            font-weight: 400;
+        }
+        
+        /* Metallic reflective effect */
+        .metallic-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+            border-radius: inherit;
+        }
+        
+        /* Chrome accents */
+        .chrome-accent {
+            background: linear-gradient(145deg, rgba(180,180,180,0.2), rgba(220,220,220,0.1));
+            border-radius: 8px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            color: #c0c0c0;
+            border: 1px solid rgba(150,150,150,0.2);
+        }
+        
+        /* Audio player status */
+        .player-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(40, 40, 40, 0.8);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #a0a0a0;
+            border: 1px solid rgba(150, 150, 150, 0.2);
+            z-index: 5;
+        }
+        
+        /* EQ Mode Toggle */
+        .eq-mode-toggle {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 3;
+        }
+        
+        .eq-mode-btn {
+            background: rgba(40, 40, 80, 0.7);
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            color: #a0c0ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .eq-mode-btn:hover {
+            background: rgba(60, 60, 120, 0.8);
+        }
+        
+        .eq-mode-btn.active {
+            background: rgba(80, 80, 160, 0.9);
+            color: #ffffff;
+            border-color: rgba(150, 150, 255, 0.5);
+        }
+        
+        /* Particle effects for EQ */
+        .eq-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .eq-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: rgba(0, 200, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        /* VU Meter style for EQ */
+        .vu-meter {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, 
+                #00ff00 0%, 
+                #ffff00 50%, 
+                #ff0000 100%);
+            opacity: 0.7;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-info-circle"></i>
+        <span id="notification-text">Files uploaded successfully!</span>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>CHROME AUDIO</h1>
+            <p>ADVANCED EQ VISUALIZER</p>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="metallic-effect"></div>
+            <div class="upload-header">
+                <h2>Upload Audio Files</h2>
+                <div class="upload-controls">
+                    <button class="metal-btn upload-btn" id="upload-trigger">
+                        <i class="fas fa-file-upload"></i>
+                        UPLOAD
+                    </button>
+                    <button class="metal-btn clear-btn" id="clear-playlist">
+                        <i class="fas fa-trash"></i>
+                        CLEAR
+                    </button>
+                </div>
+            </div>
+            
+            <div class="upload-area" id="upload-area">
+                <i class="fas fa-music"></i>
+                <h3>Drag & Drop MP3 Files</h3>
+                <p>or click to browse files</p>
+                <p class="chrome-accent">MP3, WAV, OGG, M4A</p>
+                <input type="file" class="file-input" id="file-input" accept=".mp3,.wav,.ogg,.m4a,.aac" multiple>
+            </div>
+        </div>
+        
+        <div class="player-container">
+            <!-- Main Player -->
+            <div class="player">
+                <div class="player-status" id="player-status">Ready</div>
+                <div class="metallic-effect"></div>
+                
+                <div class="display">
+                    <div class="song-info">
+                        <div class="album-art" id="album-art">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <div class="song-details">
+                            <h3 id="song-title">Ready to Play</h3>
+                            <p id="song-artist">Upload MP3 files to begin</p>
+                            <p id="song-album">Chrome Audio Player</p>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                        <div class="time-display">
+                            <span id="current-time">0:00</span>
+                            <span id="duration">0:00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced EQ Visualizer -->
+                <div class="eq-container">
+                    <div class="eq-grid"></div>
+                    <div class="eq-center-line"></div>
+                    <div class="eq-title">Spectrum Analyzer</div>
+                    
+                    <div class="eq-mode-toggle">
+                        <button class="eq-mode-btn active" id="eq-mode-bars">Bars</button>
+                        <button class="eq-mode-btn" id="eq-mode-wave">Wave</button>
+                        <button class="eq-mode-btn" id="eq-mode-circle">Circle</button>
+                    </div>
+                    
+                    <div class="eq-visualizer" id="eq-visualizer">
+                        <!-- EQ bars will be generated by JavaScript -->
+                    </div>
+                    
+                    <div class="spectrum-container" id="spectrum-container">
+                        <!-- Spectrum analyzer lines -->
+                    </div>
+                    
+                    <div class="eq-particles" id="eq-particles"></div>
+                    <div class="vu-meter" id="vu-meter"></div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn" id="prev-btn">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <button class="control-btn play-btn" id="play-btn">
+                        <i class="fas fa-play" id="play-icon"></i>
+                    </button>
+                    
+                    <button class="control-btn" id="next-btn">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                </div>
+                
+                <div class="volume-container">
+                    <i class="fas fa-volume-up" style="color: #c0c0c0;"></i>
+                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="70">
+                </div>
+            </div>
+            
+            <!-- Playlist -->
+            <div class="playlist">
+                <div class="metallic-effect"></div>
+                <div class="playlist-header">
+                    <h2>Playlist</h2>
+                    <div class="track-count" id="track-count">0 tracks</div>
+                </div>
+                <div class="playlist-items" id="playlist-items">
+                    <div class="empty-playlist">
+                        <i class="fas fa-music"></i>
+                        <h3>Playlist Empty</h3>
+                        <p>Upload audio files to see them here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Chrome Audio Player • Advanced EQ Visualizer • Metallic Interface</p>
+        </div>
+    </div>
+
+    <script>
+        // SIMPLIFIED AUDIO PLAYER - This will fix the playback issue
+        
+        // Player state
+        let playlist = [];
+        let currentSongIndex = -1;
+        let isPlaying = false;
+        let audioPlayer = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let eqMode = 'bars'; // 'bars', 'wave', 'circle'
+        
+        // DOM Elements
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volume-slider');
+        const songTitle = document.getElementById('song-title');
+        const songArtist = document.getElementById('song-artist');
+        const songAlbum = document.getElementById('song-album');
+        const albumArt = document.getElementById('album-art');
+        const playlistItems = document.getElementById('playlist-items');
+        const trackCount = document.getElementById('track-count');
+        const fileInput = document.getElementById('file-input');
+        const uploadTrigger = document.getElementById('upload-trigger');
+        const uploadArea = document.getElementById('upload-area');
+        const clearPlaylistBtn = document.getElementById('clear-playlist');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const eqVisualizer = document.getElementById('eq-visualizer');
+        const spectrumContainer = document.getElementById('spectrum-container');
+        const eqParticles = document.getElementById('eq-particles');
+        const vuMeter = document.getElementById('vu-meter');
+        const playerStatus = document.getElementById('player-status');
+        
+        // EQ Mode buttons
+        const eqModeBarsBtn = document.getElementById('eq-mode-bars');
+        const eqModeWaveBtn = document.getElementById('eq-mode-wave');
+        const eqModeCircleBtn = document.getElementById('eq-mode-circle');
+        
+        // Color palette for album art backgrounds (metallic tones)
+        const colorPalette = [
+            '#2a2a2a', '#3a3a3a', '#4a4a4a', '#5a5a5a',
+            '#353535', '#454545', '#555555', '#656565'
+        ];
+        
+        // EQ variables
+        let eqBars = [];
+        let spectrumLines = [];
+        let dataArray = null;
+        let bufferLength = null;
+        
+        // Initialize player
+        function initPlayer() {
+            console.log("Initializing player...");
+            
+            // Create audio player
+            audioPlayer = new Audio();
+            
+            // Set initial volume
+            audioPlayer.volume = volumeSlider.value / 100;
+            
+            // Load playlist from localStorage if available
+            loadPlaylistFromStorage();
+            
+            // Create EQ visualizer
+            createEQVisualizer();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Update UI
+            updatePlaylistUI();
+            
+            // Initialize audio context
+            initAudioContext();
+            
+            console.log("Player initialized successfully");
+        }
+        
+        // Initialize audio context for visualization
+        function initAudioContext() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256; // Good balance of detail and performance
+                analyser.smoothingTimeConstant = 0.8;
+                
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                console.log("Audio context initialized");
+            } catch (e) {
+                console.warn("Web Audio API not supported:", e);
+                playerStatus.textContent = "Visualizer disabled";
+            }
+        }
+        
+        // Connect audio to analyser when playing
+        function connectAudioToAnalyser() {
+            if (!audioContext || !analyser) return;
+            
+            try {
+                // Create a new source node each time
+                const source = audioContext.createMediaElementSource(audioPlayer);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                console.log("Audio connected to analyser");
+            } catch (e) {
+                console.warn("Could not connect audio to analyser:", e);
+            }
+        }
+        
+        // Create enhanced EQ visualizer
+        function createEQVisualizer() {
+            eqVisualizer.innerHTML = '';
+            eqBars = [];
+            
+            const barCount = 24; // More bars for better visualization
+            
+            // Frequency labels (simplified)
+            const freqLabels = ['20', '100', '250', '500', '1k', '2k', '4k', '8k', '16k'];
+            
+            for (let i = 0; i < barCount; i++) {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'eq-bar-container';
+                
+                // Create glow effect
+                const glow = document.createElement('div');
+                glow.className = 'eq-bar-glow';
+                glow.id = `eq-glow-${i}`;
+                
+                // Create the bar
+                const bar = document.createElement('div');
+                bar.className = 'eq-bar';
+                bar.id = `eq-bar-${i}`;
+                bar.style.height = '4px'; // Start with minimal height
+                
+                // Add frequency label for certain bars
+                if (i % 3 === 0 && i / 3 < freqLabels.length) {
+                    const label = document.createElement('div');
+                    label.className = 'eq-frequency-label';
+                    label.textContent = freqLabels[i/3];
+                    barContainer.appendChild(label);
+                }
+                
+                barContainer.appendChild(glow);
+                barContainer.appendChild(bar);
+                eqVisualizer.appendChild(barContainer);
+                
+                eqBars.push(bar);
+            }
+            
+            // Create spectrum analyzer lines
+            createSpectrumAnalyzer();
+            
+            // Create particles for EQ
+            createEQParticles();
+        }
+        
+        // Create spectrum analyzer lines
+        function createSpectrumAnalyzer() {
+            spectrumContainer.innerHTML = '';
+            spectrumLines = [];
+            
+            const lineCount = 100;
+            
+            for (let i = 0; i < lineCount; i++) {
+                const line = document.createElement('div');
+                line.className = 'spectrum-line';
+                line.id = `spectrum-line-${i}`;
+                line.style.left = `${(i / lineCount) * 100}%`;
+                line.style.height = '0%';
+                
+                spectrumContainer.appendChild(line);
+                spectrumLines.push(line);
+            }
+        }
+        
+        // Create particles for EQ effects
+        function createEQParticles() {
+            eqParticles.innerHTML = '';
+            
+            // Create a few particles that will move with the music
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'eq-particle';
+                particle.id = `eq-particle-${i}`;
+                
+                // Random initial position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.bottom = `${Math.random() * 100}%`;
+                
+                // Random color
+                const hue = Math.random() * 60 + 200; // Blue to purple range
+                particle.style.backgroundColor = `hsla(${hue}, 100%, 70%, 0.7)`;
+                
+                eqParticles.appendChild(particle);
+            }
+        }
+        
+        // Animate EQ based on mode
+        function animateEQ() {
+            if (!analyser || !isPlaying) {
+                // Try again later if not ready
+                if (isPlaying) {
+                    animationId = requestAnimationFrame(animateEQ);
+                }
+                return;
+            }
+            
+            animationId = requestAnimationFrame(animateEQ);
+            
+            try {
+                analyser.getByteFrequencyData(dataArray);
+                
+                if (eqMode === 'bars') {
+                    animateEQBars();
+                } else if (eqMode === 'wave') {
+                    animateEQWave();
+                } else if (eqMode === 'circle') {
+                    animateEQCircle();
+                }
+                
+                // Update VU meter
+                updateVUMeter();
+                
+                // Update particles
+                updateEQParticles();
+                
+            } catch (e) {
+                console.warn("EQ visualization error:", e);
+            }
+        }
+        
+        // Animate EQ bars
+        function animateEQBars() {
+            if (!eqBars.length) return;
+            
+            const barCount = eqBars.length;
+            const step = Math.floor(bufferLength / barCount);
+            
+            // Calculate overall volume for glow effects
+            let overallVolume = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                overallVolume += dataArray[i];
+            }
+            overallVolume = overallVolume / bufferLength / 255;
+            
+            for (let i = 0; i < barCount; i++) {
+                // Use multiple frequency bins for each bar for smoother visualization
+                let sum = 0;
+                const samples = 3;
+                for (let j = 0; j < samples; j++) {
+                    sum += dataArray[i * step + j] || 0;
+                }
+                const avgValue = sum / samples;
+                
+                // Apply logarithmic scaling for more natural visualization
+                const logValue = Math.log10(avgValue + 1) / Math.log10(256) * 255;
+                const height = 4 + (logValue / 255) * 100; // 4px to 104px
+                
+                // Update bar height with smoothing
+                const currentHeight = parseInt(eqBars[i].style.height) || 4;
+                const newHeight = currentHeight * 0.7 + height * 0.3;
+                eqBars[i].style.height = `${newHeight}px`;
+                
+                // Update bar color based on frequency and volume
+                const hue = 200 + (i / barCount) * 160; // Blue to purple gradient
+                const saturation = 70 + (overallVolume * 30);
+                const lightness = 50 + (avgValue / 255) * 20;
+                
+                eqBars[i].style.background = `linear-gradient(to top, 
+                    hsla(${hue}, ${saturation}%, ${lightness}%, 1) 0%, 
+                    hsla(${hue + 20}, ${saturation}%, ${lightness - 10}%, 1) 30%, 
+                    hsla(${hue + 40}, ${saturation}%, ${lightness - 20}%, 1) 70%, 
+                    hsla(${hue + 60}, ${saturation}%, ${lightness - 30}%, 1) 100%)`;
+                
+                // Update glow opacity based on bar height
+                const glow = document.getElementById(`eq-glow-${i}`);
+                if (glow) {
+                    const glowOpacity = 0.3 + (newHeight / 104) * 0.5;
+                    glow.style.opacity = glowOpacity;
+                }
+            }
+        }
+        
+        // Animate EQ as a wave
+        function animateEQWave() {
+            if (!spectrumLines.length) return;
+            
+            const lineCount = spectrumLines.length;
+            const step = Math.floor(bufferLength / lineCount);
+            
+            for (let i = 0; i < lineCount; i++) {
+                const value = dataArray[i * step] || 0;
+                const height = (value / 255) * 100;
+                
+                // Update line height with smoothing
+                const currentHeight = parseInt(spectrumLines[i].style.height) || 0;
+                const newHeight = currentHeight * 0.7 + height * 0.3;
+                spectrumLines[i].style.height = `${newHeight}%`;
+                
+                // Update line color based on frequency
+                const hue = 200 + (i / lineCount) * 160;
+                spectrumLines[i].style.background = `linear-gradient(to top, 
+                    transparent 0%, 
+                    hsla(${hue}, 80%, 70%, 0.4) 30%, 
+                    hsla(${hue + 40}, 100%, 60%, 0.7) 70%, 
+                    transparent 100%)`;
+            }
+            
+            // Hide bars when in wave mode
+            eqBars.forEach(bar => {
+                bar.style.opacity = '0.3';
+            });
+        }
+        
+        // Animate EQ as a circle (simplified to bars in circle pattern)
+        function animateEQCircle() {
+            if (!eqBars.length) return;
+            
+            const barCount = eqBars.length;
+            const step = Math.floor(bufferLength / barCount);
+            
+            for (let i = 0; i < barCount; i++) {
+                // Get frequency value
+                let sum = 0;
+                const samples = 3;
+                for (let j = 0; j < samples; j++) {
+                    sum += dataArray[i * step + j] || 0;
+                }
+                const avgValue = sum / samples;
+                
+                // Apply different scaling for circle mode
+                const height = 4 + (avgValue / 255) * 80;
+                
+                // Update bar height
+                const currentHeight = parseInt(eqBars[i].style.height) || 4;
+                const newHeight = currentHeight * 0.7 + height * 0.3;
+                eqBars[i].style.height = `${newHeight}px`;
+                
+                // For circle mode, we can rotate or transform bars
+                // For now, just change colors
+                const hue = (i / barCount) * 360;
+                eqBars[i].style.background = `linear-gradient(to top, 
+                    hsla(${hue}, 100%, 60%, 1) 0%, 
+                    hsla(${hue + 60}, 100%, 50%, 1) 100%)`;
+                
+                // Add some rotation for visual effect
+                eqBars[i].style.transform = `rotate(${(Math.sin(Date.now() / 1000 + i) * 5)}deg)`;
+            }
+        }
+        
+        // Update VU meter
+        function updateVUMeter() {
+            if (!dataArray) return;
+            
+            // Calculate average volume
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                sum += dataArray[i];
+            }
+            const avgVolume = sum / bufferLength / 255;
+            
+            // Update VU meter width
+            vuMeter.style.width = `${avgVolume * 100}%`;
+            
+            // Change color based on volume (green -> yellow -> red)
+            if (avgVolume < 0.5) {
+                vuMeter.style.background = `linear-gradient(to right, 
+                    #00ff00 0%, 
+                    #ffff00 50%, 
+                    #ff0000 100%)`;
+            } else if (avgVolume < 0.8) {
+                vuMeter.style.background = `linear-gradient(to right, 
+                    #00ff00 0%, 
+                    #ffff00 30%, 
+                    #ff0000 100%)`;
+            } else {
+                vuMeter.style.background = `linear-gradient(to right, 
+                    #00ff00 0%, 
+                    #ffff00 20%, 
+                    #ff0000 100%)`;
+            }
+        }
+        
+        // Update EQ particles
+        function updateEQParticles() {
+            if (!dataArray) return;
+            
+            // Get bass frequencies for particle movement
+            const bassValue = dataArray[0] || 0;
+            const normalizedBass = bassValue / 255;
+            
+            // Move particles based on bass
+            const particles = document.querySelectorAll('.eq-particle');
+            particles.forEach((particle, i) => {
+                // Random movement based on bass
+                const moveX = Math.sin(Date.now() / 1000 + i) * 5 * normalizedBass;
+                const moveY = Math.cos(Date.now() / 1000 + i) * 10 * normalizedBass;
+                
+                // Update position
+                let left = parseFloat(particle.style.left) || 50;
+                let bottom = parseFloat(particle.style.bottom) || 50;
+                
+                left = (left + moveX) % 100;
+                bottom = (bottom + moveY) % 100;
+                if (bottom < 0) bottom = 100 + bottom;
+                
+                particle.style.left = `${left}%`;
+                particle.style.bottom = `${bottom}%`;
+                
+                // Pulsate opacity with bass
+                const opacity = 0.3 + normalizedBass * 0.5;
+                particle.style.opacity = opacity;
+            });
+        }
+        
+        // Change EQ mode
+        function changeEQMode(mode) {
+            eqMode = mode;
+            
+            // Update active button
+            eqModeBarsBtn.classList.toggle('active', mode === 'bars');
+            eqModeWaveBtn.classList.toggle('active', mode === 'wave');
+            eqModeCircleBtn.classList.toggle('active', mode === 'circle');
+            
+            // Reset visualizer for new mode
+            if (mode === 'wave') {
+                eqBars.forEach(bar => {
+                    bar.style.opacity = '0.3';
+                });
+                spectrumContainer.style.opacity = '0.8';
+            } else {
+                eqBars.forEach(bar => {
+                    bar.style.opacity = '1';
+                    bar.style.transform = 'none';
+                });
+                spectrumContainer.style.opacity = '0.4';
+            }
+            
+            // Update EQ title
+            const eqTitle = document.querySelector('.eq-title');
+            if (mode === 'bars') eqTitle.textContent = 'Spectrum Analyzer';
+            else if (mode === 'wave') eqTitle.textContent = 'Waveform Display';
+            else if (mode === 'circle') eqTitle.textContent = 'Circular Visualizer';
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            notificationText.textContent = message;
+            
+            if (type === 'error') {
+                notification.style.background = 'rgba(60, 30, 30, 0.95)';
+                notification.style.borderColor = 'rgba(180, 80, 80, 0.3)';
+            } else {
+                notification.style.background = 'rgba(30, 30, 30, 0.95)';
+                notification.style.borderColor = 'rgba(150, 150, 150, 0.3)';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Handle file uploads
+        function handleFileUpload(files) {
+            if (!files || files.length === 0) return;
+            
+            const validFiles = Array.from(files).filter(file => {
+                const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/aac'];
+                const validExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                return validTypes.includes(file.type) || validExtensions.includes(fileExtension);
+            });
+            
+            if (validFiles.length === 0) {
+                showNotification('No valid audio files selected. Please select MP3, WAV, OGG, or M4A files.', 'error');
+                return;
+            }
+            
+            showNotification(`Processing ${validFiles.length} audio file(s)...`);
+            
+            validFiles.forEach(file => {
+                const fileURL = URL.createObjectURL(file);
+                
+                // Extract song name from filename (remove extension)
+                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                
+                // Create a new song object
+                const newSong = {
+                    id: Date.now() + Math.random(),
+                    title: fileName,
+                    artist: 'Unknown Artist',
+                    album: 'Unknown Album',
+                    src: fileURL,
+                    file: file,
+                    color: colorPalette[Math.floor(Math.random() * colorPalette.length)]
+                };
+                
+                // Add to playlist
+                playlist.push(newSong);
+                
+                // If this is the first song added, set it as current
+                if (playlist.length === 1) {
+                    currentSongIndex = 0;
+                    loadSong(currentSongIndex);
+                }
+            });
+            
+            // Update UI
+            updatePlaylistUI();
+            savePlaylistToStorage();
+            showNotification(`${validFiles.length} file(s) added to playlist!`);
+        }
+        
+        // Load song by index
+        function loadSong(index) {
+            if (index < 0 || index >= playlist.length) {
+                resetPlayerUI();
+                return;
+            }
+            
+            const song = playlist[index];
+            currentSongIndex = index;
+            
+            console.log(`Loading song: ${song.title}`);
+            
+            // Stop current playback
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                playIcon.className = 'fas fa-play';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+            
+            // Clear previous audio source
+            audioPlayer.src = '';
+            
+            // Set new audio source
+            audioPlayer.src = song.src;
+            
+            // Load the audio
+            audioPlayer.load();
+            
+            // Update UI
+            songTitle.textContent = song.title;
+            songArtist.textContent = song.artist;
+            songAlbum.textContent = song.album;
+            albumArt.style.background = `linear-gradient(135deg, ${song.color}, #101010)`;
+            albumArt.innerHTML = '<i class="fas fa-music"></i>';
+            
+            // Reset progress
+            progress.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+            durationEl.textContent = '0:00';
+            
+            // Update active playlist item
+            updateActivePlaylistItem();
+            
+            // Enable play button
+            playBtn.disabled = false;
+            playBtn.style.opacity = '1';
+            playBtn.style.cursor = 'pointer';
+            
+            // Set player status
+            playerStatus.textContent = "Loaded";
+            
+            console.log(`Song loaded: ${song.title}`);
+        }
+        
+        // Reset player UI when no songs
+        function resetPlayerUI() {
+            songTitle.textContent = "Ready to Play";
+            songArtist.textContent = "Upload MP3 files to begin";
+            songAlbum.textContent = "Chrome Audio Player";
+            albumArt.style.background = "linear-gradient(135deg, #202020, #101010)";
+            albumArt.innerHTML = '<i class="fas fa-play-circle"></i>';
+            progress.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+            durationEl.textContent = '0:00';
+            playerStatus.textContent = "Ready";
+            
+            // Disable play button if no songs
+            if (playlist.length === 0) {
+                playBtn.disabled = true;
+                playBtn.style.opacity = '0.5';
+                playBtn.style.cursor = 'not-allowed';
+            }
+        }
+        
+        // Update playlist UI
+        function updatePlaylistUI() {
+            playlistItems.innerHTML = '';
+            
+            if (playlist.length === 0) {
+                playlistItems.innerHTML = `
+                    <div class="empty-playlist">
+                        <i class="fas fa-music"></i>
+                        <h3>Playlist Empty</h3>
+                        <p>Upload audio files to see them here</p>
+                    </div>
+                `;
+                trackCount.textContent = '0 tracks';
+                return;
+            }
+            
+            trackCount.textContent = `${playlist.length} track${playlist.length !== 1 ? 's' : ''}`;
+            
+            playlist.forEach((song, index) => {
+                const playlistItem = document.createElement('div');
+                playlistItem.className = `playlist-item ${index === currentSongIndex ? 'active' : ''}`;
+                playlistItem.dataset.index = index;
+                
+                playlistItem.innerHTML = `
+                    <div style="width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; background: linear-gradient(135deg, ${song.color}, #101010); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(150, 150, 150, 0.3);">
+                        <i class="fas fa-music" style="color: #c0c0c0;"></i>
+                    </div>
+                    <div class="playlist-item-info">
+                        <h4>${song.title}</h4>
+                        <p>${song.artist} • ${song.album}</p>
+                    </div>
+                    <button class="playlist-item-remove" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                playlistItem.addEventListener('click', (e) => {
+                    // Don't trigger if clicking the remove button
+                    if (!e.target.closest('.playlist-item-remove')) {
+                        loadSong(index);
+                        // Auto-play when clicking a song
+                        if (!isPlaying) {
+                            setTimeout(() => togglePlay(), 100);
+                        }
+                    }
+                });
+                
+                playlistItems.appendChild(playlistItem);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.playlist-item-remove').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const index = parseInt(this.dataset.index);
+                    removeSongFromPlaylist(index);
+                });
+            });
+        }
+        
+        // Remove song from playlist
+        function removeSongFromPlaylist(index) {
+            if (index < 0 || index >= playlist.length) return;
+            
+            // If removing the currently playing song
+            const wasCurrentSong = index === currentSongIndex;
+            
+            // Revoke the object URL to free memory
+            if (playlist[index].src) {
+                URL.revokeObjectURL(playlist[index].src);
+            }
+            
+            // Remove from playlist array
+            playlist.splice(index, 1);
+            
+            // If we removed the current song
+            if (wasCurrentSong) {
+                if (isPlaying) {
+                    audioPlayer.pause();
+                    isPlaying = false;
+                    playIcon.className = 'fas fa-play';
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                        animationId = null;
+                    }
+                }
+                
+                // If there are still songs, load the next one (or previous if last)
+                if (playlist.length > 0) {
+                    if (index >= playlist.length) {
+                        currentSongIndex = playlist.length - 1;
+                    }
+                    loadSong(currentSongIndex);
+                } else {
+                    currentSongIndex = -1;
+                    resetPlayerUI();
+                }
+            } else if (index < currentSongIndex) {
+                // Adjust current song index if we removed a song before it
+                currentSongIndex--;
+            }
+            
+            // Update UI and save
+            updatePlaylistUI();
+            savePlaylistToStorage();
+            
+            showNotification('Song removed from playlist');
+        }
+        
+        // Clear entire playlist
+        function clearPlaylist() {
+            if (playlist.length === 0) {
+                showNotification('Playlist is already empty', 'info');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear the entire playlist?')) {
+                // Revoke all object URLs to free memory
+                playlist.forEach(song => {
+                    if (song.src) {
+                        URL.revokeObjectURL(song.src);
+                    }
+                });
+                
+                // Reset playlist
+                playlist = [];
+                currentSongIndex = -1;
+                
+                // Stop audio if playing
+                if (isPlaying) {
+                    audioPlayer.pause();
+                    isPlaying = false;
+                    playIcon.className = 'fas fa-play';
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                        animationId = null;
+                    }
+                }
+                
+                // Clear audio source
+                audioPlayer.src = '';
+                
+                // Update UI
+                updatePlaylistUI();
+                resetPlayerUI();
+                savePlaylistToStorage();
+                
+                showNotification('Playlist cleared');
+            }
+        }
+        
+        // Update active playlist item
+        function updateActivePlaylistItem() {
+            const items = document.querySelectorAll('.playlist-item');
+            items.forEach((item, index) => {
+                if (index === currentSongIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // Toggle play/pause
+        function togglePlay() {
+            if (playlist.length === 0) return;
+            
+            if (isPlaying) {
+                // Pause audio
+                audioPlayer.pause();
+                playIcon.className = 'fas fa-play';
+                isPlaying = false;
+                playerStatus.textContent = "Paused";
+                
+                // Stop EQ animation
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            } else {
+                // If no song is loaded, load the first one
+                if (currentSongIndex === -1 && playlist.length > 0) {
+                    currentSongIndex = 0;
+                    loadSong(currentSongIndex);
+                }
+                
+                // Play the audio
+                const playPromise = audioPlayer.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        // Successfully started playing
+                        playIcon.className = 'fas fa-pause';
+                        isPlaying = true;
+                        playerStatus.textContent = "Playing";
+                        
+                        // Connect to audio analyser for visualization
+                        if (audioContext && audioContext.state === 'suspended') {
+                            audioContext.resume();
+                        }
+                        connectAudioToAnalyser();
+                        
+                        // Start EQ animation
+                        if (!animationId) {
+                            animateEQ();
+                        }
+                    }).catch(error => {
+                        // Error playing audio
+                        console.error("Error playing audio:", error);
+                        playIcon.className = 'fas fa-play';
+                        isPlaying = false;
+                        playerStatus.textContent = "Error";
+                        showNotification("Could not play audio. Click the song in playlist first.", "error");
+                    });
+                }
+            }
+        }
+        
+        // Format time (seconds to MM:SS)
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const { currentTime, duration } = audioPlayer;
+            
+            if (isFinite(duration) && duration > 0) {
+                const progressPercent = (currentTime / duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+                
+                currentTimeEl.textContent = formatTime(currentTime);
+                durationEl.textContent = formatTime(duration);
+            }
+        }
+        
+        // Set progress on click
+        function setProgress(e) {
+            if (playlist.length === 0 || !audioPlayer.duration) return;
+            
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            
+            if (!isNaN(duration) && isFinite(duration)) {
+                audioPlayer.currentTime = (clickX / width) * duration;
+            }
+        }
+        
+        // Change volume
+        function setVolume() {
+            audioPlayer.volume = this.value / 100;
+        }
+        
+        // Previous song
+        function prevSong() {
+            if (playlist.length === 0) return;
+            
+            let newIndex = currentSongIndex - 1;
+            if (newIndex < 0) newIndex = playlist.length - 1;
+            loadSong(newIndex);
+            
+            if (isPlaying) {
+                setTimeout(() => togglePlay(), 100);
+            }
+        }
+        
+        // Next song
+        function nextSong() {
+            if (playlist.length === 0) return;
+            
+            let newIndex = currentSongIndex + 1;
+            if (newIndex >= playlist.length) newIndex = 0;
+            loadSong(newIndex);
+            
+            if (isPlaying) {
+                setTimeout(() => togglePlay(), 100);
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Play/Pause button
+            playBtn.addEventListener('click', togglePlay);
+            
+            // Previous/Next buttons
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            
+            // Progress bar click
+            progressBar.addEventListener('click', setProgress);
+            
+            // Volume slider
+            volumeSlider.addEventListener('input', setVolume);
+            
+            // Audio events
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            audioPlayer.addEventListener('ended', nextSong);
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                durationEl.textContent = formatTime(audioPlayer.duration);
+                playerStatus.textContent = "Loaded";
+            });
+            
+            audioPlayer.addEventListener('play', () => {
+                playerStatus.textContent = "Playing";
+            });
+            
+            audioPlayer.addEventListener('pause', () => {
+                playerStatus.textContent = "Paused";
+            });
+            
+            audioPlayer.addEventListener('error', (e) => {
+                console.error("Audio error:", e);
+                playerStatus.textContent = "Error";
+                showNotification("Error loading audio file", "error");
+            });
+            
+            // EQ mode buttons
+            eqModeBarsBtn.addEventListener('click', () => changeEQMode('bars'));
+            eqModeWaveBtn.addEventListener('click', () => changeEQMode('wave'));
+            eqModeCircleBtn.addEventListener('click', () => changeEQMode('circle'));
+            
+            // Upload triggers
+            uploadTrigger.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file input change
+            fileInput.addEventListener('change', (e) => {
+                handleFileUpload(e.target.files);
+                e.target.value = '';
+            });
+            
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(200, 200, 200, 0.5)';
+                uploadArea.style.background = 'rgba(35, 35, 35, 0.5)';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = 'rgba(150, 150, 150, 0.3)';
+                uploadArea.style.background = 'rgba(25, 25, 25, 0.5)';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(150, 150, 150, 0.3)';
+                uploadArea.style.background = 'rgba(25, 25, 25, 0.5)';
+                handleFileUpload(e.dataTransfer.files);
+            });
+            
+            // Clear playlist button
+            clearPlaylistBtn.addEventListener('click', clearPlaylist);
+            
+            // Spacebar to play/pause
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !e.target.matches('input, button, textarea')) {
+                    e.preventDefault();
+                    togglePlay();
+                }
+                
+                // Left/right arrow for previous/next
+                if (e.code === 'ArrowLeft' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    prevSong();
+                }
+                
+                if (e.code === 'ArrowRight' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    nextSong();
+                }
+            });
+            
+            // Handle page unload to revoke object URLs
+            window.addEventListener('beforeunload', () => {
+                playlist.forEach(song => {
+                    if (song.src) {
+                        URL.revokeObjectURL(song.src);
+                    }
+                });
+                
+                // Cancel animation frame
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            });
+        }
+        
+        // Initialize the player when page loads
+        window.addEventListener('DOMContentLoaded', initPlayer);
+    </script>
+</body>
+</html>
